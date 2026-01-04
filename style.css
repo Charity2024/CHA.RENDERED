@@ -1,0 +1,80 @@
+:root {
+    --bg-color: #0a0a0c;
+    --star-color: #ffffff;
+    --accent: #00f2ff;
+    --font-main: 'Inter', sans-serif;
+    --line-opacity: 0.2;
+}
+
+/* Identity-Specific Overrides */
+[data-theme="engineer"] {
+    --bg-color: #0f1115;
+    --accent: #4ade80;
+    --font-main: 'JetBrains Mono', monospace;
+}
+
+[data-theme="space"] {
+    --bg-color: radial-gradient(circle, #1b2735 0%, #090a0f 100%);
+    --accent: #fcd34d;
+    --font-main: 'Orbitron', sans-serif;
+}
+
+[data-theme="academia"] {
+    --bg-color: #f5f2ed;
+    --star-color: #1a1a1a;
+    --accent: #7c2d12;
+    --font-main: 'EB Garamond', serif;
+    --line-opacity: 0.5;
+}
+
+body, html {
+    margin: 0; padding: 0;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: var(--bg-color);
+    color: var(--star-color);
+    font-family: var(--font-main);
+    transition: background 1s ease, color 1s ease;
+}
+
+.identity-switcher {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--star-color);
+    color: inherit;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    backdrop-filter: blur(5px);
+}
+
+#universe {
+    width: 100%;
+    height: 100%;
+}
+
+.star {
+    cursor: pointer;
+    transition: filter 0.3s;
+}
+
+.star:hover {
+    filter: drop-shadow(0 0 8px var(--accent));
+}
+
+.constellation-line {
+    stroke: var(--star-color);
+    stroke-width: 0.5;
+    opacity: var(--line-opacity);
+    transition: opacity 1s;
+}
