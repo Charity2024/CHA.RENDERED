@@ -28,6 +28,13 @@
             padding: clamp(15px, 4vw, 25px); pointer-events: all; border-radius: 12px;
         }
 
+        /* Instructions Card Styling */
+        #onboarding-card {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 150; width: 90%; max-width: 400px; text-align: center;
+            display: none; opacity: 0;
+        }
+
         #hud {
             position: fixed; inset: 0; pointer-events: none; z-index: 10;
             padding: clamp(15px, 3vw, 30px); display: flex; flex-direction: column; justify-content: space-between;
@@ -53,7 +60,7 @@
         .action-chip:hover { background: var(--accent); color: #000; }
 
         #boot-screen {
-            position: fixed; inset: 0; z-index: 100; background: #000;
+            position: fixed; inset: 0; z-index: 200; background: #000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.4em; text-align: center; padding: 20px;
         }
@@ -62,16 +69,26 @@
         .loader-progress { width: 0%; height: 100%; background: var(--accent); }
 
         @media (max-width: 600px) {
-            #brand { display: none; } /* Hide text logo on tiny screens to save space */
+            #brand { display: none; }
             .header { justify-content: center; }
-            #node-info { bottom: 15px; }
         }
     </style>
 </head>
 <body>
 
+    <div id="onboarding-card" class="glass-panel">
+        <h3 style="letter-spacing: 0.3em; font-size: 0.8rem; margin-bottom: 20px; color: var(--accent);">NEURAL_GUIDE</h3>
+        <ul style="text-align: left; font-size: 0.75rem; list-style: none; line-height: 2; opacity: 0.8; font-weight: 300; margin-bottom: 25px;">
+            <li><span style="color: var(--accent);">[ CLICK ]</span> Select a neural node</li>
+            <li><span style="color: var(--accent);">[ DRAG ]</span> Navigate the consciousness</li>
+            <li><span style="color: var(--accent);">[ SCROLL ]</span> Zoom in/out of the galaxy</li>
+            <li><span style="color: var(--accent);">[ BUTTONS ]</span> Toggle render modes</li>
+        </ul>
+        <div onclick="startExperience()" class="action-chip" style="cursor: pointer; display: block; width: 100%;">BEGIN_SYNC</div>
+    </div>
+
     <div id="boot-screen">
-        <div id="boot-text">INITIALIZING CONSCIOUSNESS..</div>
+        <div id="boot-text">INITIALIZING CONSCIOUSNESS...</div>
         <div class="loader-bar"><div class="loader-progress" id="boot-bar"></div></div>
     </div>
 
@@ -113,7 +130,6 @@
         const ctx = canvas.getContext('2d');
         let w, h, stars = [], nodes = [], links = [], currentMode = 'space-nerd';
         
-        // Responsive Scaling Factor
         let scaleFactor = window.innerWidth < 600 ? 0.6 : 1;
         let zoom = 0.4 * scaleFactor, targetZoom = 0.4 * scaleFactor;
         let camX = 0, camY = 0, targetCamX = 0, targetCamY = 0;
@@ -158,7 +174,7 @@
                 });
             });
 
-            for(let i=0; i < (w < 600 ? 2500 : 5500); i++) {
+            for(let i=0; i < (w < 600 ? 2000 : 5000); i++) {
                 stars.push({ x: (Math.random()-0.5)*12000, y: (Math.random()-0.5)*12000, sp: Math.random()*0.3 + 0.05, alpha: Math.random() });
             }
         }
@@ -178,14 +194,12 @@
             camX += (targetCamX - camX) * 0.05;
             camY += (targetCamY - camY) * 0.05;
 
-            // Drift
             nodes.forEach(n => {
                 const drift = n.isHub ? 10 : 30;
                 n.x = n.baseX + Math.sin(time + n.phase) * drift;
                 n.y = n.baseY + Math.cos(time * 0.8 + n.phase) * drift;
             });
 
-            // Stars
             stars.forEach(s => {
                 const sx = w/2 + (s.x + camX * s.sp) * zoom;
                 const sy = h/2 + (s.y + camY * s.sp) * zoom;
@@ -195,7 +209,6 @@
                 }
             });
 
-            // Organic Bezier Links
             links.forEach(l => {
                 const x1 = w/2 + (l.source.x + camX) * zoom;
                 const y1 = h/2 + (l.source.y + camY) * zoom;
@@ -205,7 +218,7 @@
                 const cpy = (y1 + y2) / 2 + Math.cos(time + l.s) * 40 * zoom;
 
                 ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(cpx, cpy, x2, y2);
-                ctx.strokeStyle = accent; ctx.globalAlpha = 0.08 * zoom; ctx.lineWidth = 1; ctx.stroke();
+                ctx.strokeStyle = accent; ctx.globalAlpha = 0.08 * zoom; ctx.stroke();
 
                 l.s = (l.s + 0.002) % 1;
                 const t = l.s;
@@ -215,7 +228,6 @@
                 ctx.beginPath(); ctx.arc(px, py, 1.2 * zoom, 0, Math.PI*2); ctx.fill();
             });
 
-            // Nodes
             nodes.forEach(n => {
                 const nx = w/2 + (n.x + camX) * zoom;
                 const ny = h/2 + (n.y + camY) * zoom;
@@ -239,6 +251,12 @@
             requestAnimationFrame(animate);
         }
 
+        function startExperience() {
+            gsap.to('#onboarding-card', { opacity: 0, duration: 0.5, onComplete: () => {
+                document.getElementById('onboarding-card').style.display = 'none';
+            }});
+        }
+
         function setMode(mode, btn) {
             currentMode = mode;
             document.documentElement.setAttribute('data-mode', mode);
@@ -248,22 +266,12 @@
 
         function closeNode() { focusedNode = null; targetZoom = 0.4 * scaleFactor; document.getElementById('node-info').classList.remove('visible'); }
 
-        // Multi-device Interaction
-        const handleMove = e => {
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            mouseX = clientX; mouseY = clientY;
-            document.getElementById('coord-readout').innerText = `X: ${Math.round(clientX)} | Y: ${Math.round(clientY)}`;
-        };
-
-        const handleClick = e => {
-            const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-            const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+        window.addEventListener('click', e => {
             nodes.forEach(n => {
                 const nx = w/2 + (n.x + camX) * zoom;
                 const ny = h/2 + (n.y + camY) * zoom;
-                const hitArea = (n.isHub ? 50 : 30) * scaleFactor;
-                if(Math.sqrt((clientX - nx)**2 + (clientY - ny)**2) < hitArea) {
+                if(Math.sqrt((e.clientX - nx)**2 + (e.clientY - ny)**2) < 40) {
                     focusedNode = n; targetCamX = -n.x; targetCamY = -n.y; targetZoom = 1.5;
                     document.getElementById('node-info').classList.add('visible');
                     document.getElementById('n-title').innerText = n.title;
@@ -271,12 +279,7 @@
                     document.getElementById('social-links').style.display = n.title === "IDENTITY" ? "grid" : "none";
                 }
             });
-        };
-
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchstart', handleMove);
-        window.addEventListener('click', handleClick);
-        window.addEventListener('wheel', e => { targetZoom = Math.min(Math.max(targetZoom * (e.deltaY > 0 ? 0.9 : 1.1), 0.1), 4); });
+        });
 
         window.onload = () => {
             let p = 0;
@@ -288,6 +291,10 @@
                     gsap.to('#boot-screen', { opacity: 0, delay: 0.5, onComplete: () => {
                         document.getElementById('boot-screen').style.display = 'none';
                         canvas.style.opacity = '1';
+                        // Show Onboarding Card
+                        const oc = document.getElementById('onboarding-card');
+                        oc.style.display = 'block';
+                        gsap.to(oc, { opacity: 1, duration: 1 });
                     }});
                 }
             }, 50);
