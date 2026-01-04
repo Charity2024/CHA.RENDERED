@@ -3,234 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CELESTIA™ | Personal Universe</title>
+    <title>CELESTIA™ | Kinetic Deep Verse</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Inter:wght@300;500&family=JetBrains+Mono&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap');
 
         :root {
-            --bg: #05070a;
-            --star-color: #e2e8f0;
-            --accent: #94a3b8;
+            --bg: #010208; --star-color: #ffffff; --accent: #38bdf8;
+            --nebula-1: rgba(56, 189, 248, 0.12);
+            --nebula-2: rgba(139, 92, 246, 0.12);
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
             --font: 'Inter', sans-serif;
-            --ui-opacity: 0.6;
-            --line-opacity: 0.2;
-            --panel-bg: rgba(10, 15, 25, 0.9);
-            --ease: cubic-bezier(0.2, 0, 0.2, 1);
         }
 
-        [data-mode="engineer"] {
-            --bg: #0a0a0a; --star-color: #00ff41; --accent: #00ff41;
-            --font: 'JetBrains Mono', monospace; --line-opacity: 0.1;
-        }
-
-        [data-mode="creative"] {
-            --bg: #0c0812; --star-color: #ff00ea; --accent: #7dd3fc;
-            --font: 'Inter', sans-serif; --line-opacity: 0.4;
-        }
-
-        [data-mode="academia"] {
-            --bg: #f5f2ed; --star-color: #2d241e; --accent: #5c4033;
-            --font: 'EB Garamond', serif; --line-opacity: 0.3;
-            --panel-bg: rgba(255, 255, 255, 0.95);
-        }
+        [data-mode="engineer"] { --bg: #000; --star-color: #00ff41; --accent: #00ff41; --nebula-1: rgba(0, 255, 65, 0.08); --nebula-2: rgba(0, 40, 10, 0.15); --font: 'JetBrains Mono', monospace; }
+        [data-mode="creative"] { --bg: #080110; --star-color: #ff00ea; --accent: #00f2ff; --nebula-1: rgba(255, 0, 234, 0.12); --nebula-2: rgba(0, 242, 255, 0.08); }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--star-color); font-family: var(--font); transition: background 2s; cursor: none; }
 
-        body, html {
-            width: 100%; height: 100%; overflow: hidden;
-            background-color: var(--bg); color: var(--star-color);
-            font-family: var(--font); transition: background-color 2.5s var(--ease);
+        canvas { position: fixed; inset: 0; display: block; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
+        #universe-svg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
+        
+        .overlay { position: fixed; inset: 0; pointer-events: none; z-index: 10; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; opacity: 0; }
+        
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
         }
 
-        /* --- UI OVERLAYS --- */
-        .overlay {
-            position: fixed; inset: 0; pointer-events: none; z-index: 10;
-            padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
-        }
+        .header-glass { display: flex; gap: 8px; padding: 10px 20px; pointer-events: all; width: fit-content; align-self: center; }
+        .mode-btn { cursor: pointer; font-size: 0.55rem; letter-spacing: 0.4em; text-transform: uppercase; opacity: 0.3; transition: 0.4s; padding: 8px 16px; border-radius: 12px; }
+        .mode-btn.active { opacity: 1; color: var(--accent); background: rgba(255,255,255,0.03); }
 
-        @media (min-width: 768px) { .overlay { padding: 40px; } }
-
-        .mode-switcher {
-            pointer-events: all; display: flex; gap: 15px; flex-wrap: wrap;
-            mix-blend-mode: difference;
-        }
-
-        .mode-btn {
-            cursor: pointer; font-size: 0.6rem; letter-spacing: 0.2em;
-            text-transform: uppercase; opacity: 0.4; transition: 0.5s;
-        }
-
-        .mode-btn.active { opacity: 1; font-weight: bold; }
-
-        /* --- THE UNIVERSE --- */
-        #universe-container {
-            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-        }
-
-        svg {
-            width: 100%; height: 100%; overflow: visible; touch-action: none;
-        }
-
-        .star-circle {
-            fill: var(--star-color); filter: drop-shadow(0 0 5px var(--accent));
-            cursor: pointer; pointer-events: all;
-        }
-
-        .connection-line {
-            stroke: var(--star-color); stroke-width: 0.5;
-            opacity: var(--line-opacity); transition: opacity 2s;
-        }
-
-        /* --- SLIDE PANEL --- */
         #panel {
-            position: fixed; right: 0; top: 0; bottom: 0;
-            width: 100%; max-width: 400px; padding: 40px;
-            background: var(--panel-bg); backdrop-filter: blur(20px);
-            z-index: 20; transform: translateX(100%);
-            transition: transform 0.8s var(--ease);
-            display: flex; flex-direction: column; justify-content: center;
+            position: fixed; right: 30px; top: 30px; bottom: 30px; width: 100%; max-width: 440px; 
+            padding: 60px; z-index: 20; transform: translateX(130%); 
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-
         #panel.visible { transform: translateX(0); }
 
-        #panel h2 { font-size: 2rem; font-weight: 300; margin-bottom: 10px; }
-        #panel p { font-size: 1rem; line-height: 1.8; opacity: 0.8; }
-
-        .close-btn {
-            position: absolute; top: 30px; right: 30px; cursor: pointer;
-            font-size: 0.7rem; letter-spacing: 0.2em; border: 1px solid var(--accent);
-            padding: 5px 10px; pointer-events: all;
-        }
-
-        /* --- FOOTER --- */
-        footer {
-            font-size: 0.6rem; letter-spacing: 0.3em; opacity: 0.4;
-            display: flex; justify-content: space-between; align-items: center;
+        #custom-cursor {
+            position: fixed; width: 24px; height: 24px; border: 1px solid var(--accent);
+            border-radius: 50%; pointer-events: none; z-index: 9999;
             mix-blend-mode: difference;
         }
 
-        .footer-tagline::after {
-            content: attr(data-content);
+        #arrival-scrim {
+            position: fixed; inset: 0; background: #000; z-index: 2000; 
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: all; transition: opacity 2s;
         }
+
+        footer { font-size: 0.5rem; letter-spacing: 0.5em; opacity: 0.3; display: flex; justify-content: space-between; mix-blend-mode: difference; }
     </style>
 </head>
 <body>
 
-    <div class="overlay">
-        <header>
-            <div style="font-size: 0.6rem; letter-spacing: 0.5em; opacity: 0.5;">ASTRUM_SYSCFG // 2026</div>
-        </header>
+    <div id="arrival-scrim" onclick="beginArrival()">
+        <div style="letter-spacing: 1.2em; font-size: 0.7rem; opacity: 0.6; cursor: pointer;">ACTIVATE_TRAVEL_CORE</div>
+    </div>
 
-        <nav class="mode-switcher">
+    <div id="custom-cursor"></div>
+    <canvas id="main-canvas"></canvas>
+
+    <div class="overlay" id="main-ui">
+        <header class="header-glass glass">
             <div class="mode-btn active" onclick="setMode('space-nerd', this)">Space</div>
             <div class="mode-btn" onclick="setMode('engineer', this)">Engineer</div>
             <div class="mode-btn" onclick="setMode('creative', this)">Creative</div>
-            <div class="mode-btn" onclick="setMode('academia', this)">Academia</div>
-        </nav>
-
-        <footer>
-            <div>EST. COORDINATES: <span id="mouse-coords">000,000</span></div>
-            <div class="footer-tagline" id="footer-text"></div>
-            <div>© CELESTIA</div>
+        </header>
+        <footer style="margin-top: auto;">
+            <div>TRAVEL_VELOCITY: <span id="vel-val">0.0c</span></div>
+            <div>DEEP_VERSE_LENSING_V3</div>
+            <div>© CELESTIA™ // 2026</div>
         </footer>
     </div>
 
-    <div id="panel">
-        <div class="close-btn" onclick="closePanel()">ESC // CLOSE</div>
-        <h2 id="p-title">Project Name</h2>
-        <div id="p-meta" style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 20px;">CATEGORY_NULL</div>
-        <p id="p-desc">Project details loading...</p>
+    <div id="panel" class="glass">
+        <div onclick="closePanel()" style="cursor:pointer; font-size: 0.55rem; opacity: 0.3; margin-bottom: 50px;">[ BREAK_ORBIT ]</div>
+        <h2 id="p-title" style="font-size: 2.2rem; font-weight: 300; margin-bottom: 20px;"></h2>
+        <div id="p-meta" style="font-size: 0.6rem; letter-spacing: 0.4em; margin-bottom: 40px; color: var(--accent);"></div>
+        <p id="p-desc" style="line-height: 2.2; font-size: 1.05rem; opacity: 0.6; font-weight: 300;"></p>
     </div>
 
-    <div id="universe-container">
-        <svg id="universe" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-            <g id="lines-group"></g>
-            <g id="stars-group"></g>
-        </svg>
-    </div>
+    <svg id="universe-svg">
+        <g id="links-group" opacity="0.4"></g>
+        <g id="stars-group" pointer-events="all"></g>
+    </svg>
 
     <script>
         const PROJECTS = [
-            { id: 1, title: "Neural Shell", cat: "AI_SYSTEMS",
-              pos: { "space-nerd": [30, 30], engineer: [20, 20], creative: [10, 80], academia: [50, 20] },
-              desc: {
-                "space-nerd": "A star cluster of decentralized thought, drifting in the digital void.",
-                engineer: "High-performance interface for neural network visualization. Optimized for low-latency feedback.",
-                creative: "Where the ghosts of code find a home in the symmetry of light.",
-                academia: "An exploration into the phenomenology of artificial presence."
-              }
-            },
-            { id: 2, title: "Flux Ledger", cat: "BLOCKCHAIN",
-              pos: { "space-nerd": [70, 45], engineer: [20, 50], creative: [80, 20], academia: [50, 50] },
-              desc: {
-                "space-nerd": "Mapping the migration of wealth across the event horizon.",
-                engineer: "Distributed ledger system utilizing immutable state containers and cryptographic proofing.",
-                creative: "Tracing the golden thread of value through a tapestry of chaos.",
-                academia: "A treatise on the historical evolution of currency into energy."
-              }
-            },
-            { id: 3, title: "Aether Engine", cat: "WEBGL_RENDER",
-              pos: { "space-nerd": [50, 80], engineer: [20, 80], creative: [40, 50], academia: [50, 80] },
-              desc: {
-                "space-nerd": "Illuminating the dark matter between the pixels.",
-                engineer: "WebGL-based rendering pipeline with custom GLSL shaders and real-time vertex displacement.",
-                creative: "Sculpting photons like clay in a room without walls.",
-                academia: "The aesthetics of light: simulating the sun inside a box of silicon."
-              }
-            }
+            { id: 1, title: "Neural Shell", pos: { "space-nerd": [25, 30], engineer: [15, 20], creative: [10, 60] }, desc: "Architecting synthetic cognition pathways.", meta: "AI_SINGULARITY", links: [2, 3] },
+            { id: 2, title: "Void Ledger", pos: { "space-nerd": [75, 50], engineer: [15, 50], creative: [85, 25] }, desc: "Quantum-scale distributed ledger orchestration.", meta: "MESH_LEDGER", links: [1, 3] },
+            { id: 3, title: "Aether Engine", pos: { "space-nerd": [45, 85], engineer: [15, 80], creative: [50, 40] }, desc: "Volumetric light synthesis in browser environments.", meta: "VFX_CORE", links: [1, 2] }
         ];
 
-        const footerNotes = {
-            "space-nerd": "DRIFTING THROUGH THE MULTIVERSE",
-            "engineer": "STABLE BUILD // NO ERRORS FOUND",
-            "creative": "POETRY IN MOTION",
-            "academia": "THE UNIVERSE AS A TEXT"
-        };
-
-        let currentMode = 'space-nerd';
+        const canvas = document.getElementById('main-canvas');
+        const ctx = canvas.getContext('2d');
         const starsG = document.getElementById('stars-group');
-        const linesG = document.getElementById('lines-group');
-        const universe = document.getElementById('universe');
+        const linksG = document.getElementById('links-group');
+        const cursor = document.getElementById('custom-cursor');
 
-        function init() {
-            PROJECTS.forEach((p, i) => {
-                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                g.classList.add("star-node");
-                
-                const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                c.setAttribute("r", "1.2%"); // Scalable radius
-                c.classList.add("star-circle");
-                
-                const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                t.textContent = p.title;
-                t.setAttribute("dx", "20");
-                t.setAttribute("dy", "5");
-                t.setAttribute("style", "font-size: 12px; fill: currentColor; opacity: 0; transition: opacity 0.5s; pointer-events: none;");
+        let width, height, currentMode = 'space-nerd';
+        let zoom = 0.01; let targetZoom = 0.01;
+        let particles = [], nebulas = [], rays = [], dataWorlds = [], focusedPlanet = null;
+        let cameraOffset = { x: 0, y: 0 };
+        let mouse = { x: -1000, y: -1000 };
+        let isArrived = false;
+        let velocity = 0;
 
-                g.appendChild(c);
-                g.appendChild(t);
-                starsG.appendChild(g);
-
-                g.addEventListener('mouseenter', () => { gsap.to(c, { r: "2%", duration: 0.3 }); t.style.opacity = 0.8; });
-                g.addEventListener('mouseleave', () => { gsap.to(c, { r: "1.2%", duration: 0.3 }); t.style.opacity = 0; });
-                g.addEventListener('click', (e) => { e.stopPropagation(); openPanel(p); });
-            });
-
-            createLines();
-            setMode('space-nerd', document.querySelector('.mode-btn'));
-            setupInteractions();
+        class DataWorld {
+            constructor(project) {
+                this.project = project;
+                this.pillars = Array.from({length: 40}, () => Math.random() * 250 + 50);
+            }
         }
 
-        function createLines() {
-            linesG.innerHTML = '';
-            for(let i=0; i < PROJECTS.length; i++) {
-                for(let j=i+1; j < PROJECTS.length; j++) {
-                    const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    l.classList.add("connection-line");
-                    linesG.appendChild(l);
-                }
+        class NebulaCloud {
+            constructor() {
+                this.x = (Math.random() - 0.5) * 6000;
+                this.y = (Math.random() - 0.5) * 6000;
+                this.r = Math.random() * 1800 + 900;
             }
+        }
+
+        function beginArrival() {
+            document.getElementById('arrival-scrim').style.opacity = '0';
+            setTimeout(() => document.getElementById('arrival-scrim').remove(), 2000);
+            gsap.to(window, {
+                duration: 4, onUpdate: () => { targetZoom = 130; },
+                ease: "power4.inOut",
+                onComplete: () => {
+                    isArrived = true;
+                    gsap.to('#main-ui', { opacity: 1, duration: 1.5 });
+                }
+            });
+        }
+
+        function setup() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = Array.from({length: 800}, () => ({
+                originX: (Math.random()-0.5)*7000, originY: (Math.random()-0.5)*7000, z: Math.random()*3500, size: Math.random() * 1.5 + 0.5
+            }));
+            nebulas = Array.from({length: 8}, () => new NebulaCloud());
+            dataWorlds = PROJECTS.map(p => new DataWorld(p));
+            renderDeepVerse();
+            setMode('space-nerd', document.querySelector('.mode-btn'));
+        }
+
+        function renderDeepVerse() {
+            starsG.innerHTML = '';
+            linksG.innerHTML = '';
+            PROJECTS.forEach(p => {
+                p.links.forEach(targetId => {
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.id = `link-${p.id}-${targetId}`;
+                    line.setAttribute("stroke-width", "1");
+                    line.setAttribute("stroke-dasharray", "5,10");
+                    linksG.appendChild(line);
+                });
+            });
+            PROJECTS.forEach((p) => {
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                c.setAttribute("r", "25");
+                c.style.fill = "white";
+                c.style.cursor = "pointer";
+                g.appendChild(c);
+                starsG.appendChild(g);
+                g.addEventListener('click', () => travelToNode(p));
+            });
+        }
+
+        function travelToNode(p) {
+            focusedPlanet = p;
+            targetZoom = 3500;
+            openPanel(p);
+            // Visual Velocity Feedback
+            gsap.to(window, { duration: 1, onUpdate: () => { velocity = 0.9; }, onComplete: () => { velocity = 0; } });
         }
 
         function setMode(mode, btn) {
@@ -238,58 +194,116 @@
             document.documentElement.setAttribute('data-mode', mode);
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById('footer-text').innerText = footerNotes[mode];
-
-            PROJECTS.forEach((p, i) => {
-                // Map percentages to 1000x1000 coordinate system
-                const targetX = p.pos[mode][0] * 10;
-                const targetY = p.pos[mode][1] * 10;
-                const node = starsG.children[i];
-
-                gsap.to(node.querySelector('circle'), { attr: { cx: targetX, cy: targetY }, duration: 2, ease: "expo.inOut", delay: i * 0.05 });
-                gsap.to(node.querySelector('text'), { attr: { x: targetX, y: targetY }, duration: 2, ease: "expo.inOut", delay: i * 0.05 });
-            });
-
-            updateLines();
-            closePanel();
+            PROJECTS.forEach(p => p.targetHome = [p.pos[mode][0] * 10, p.pos[mode][1] * 10]);
         }
 
-        function updateLines() {
-            const lines = linesG.children;
-            let count = 0;
-            PROJECTS.forEach((p1, i) => {
-                PROJECTS.forEach((p2, j) => {
-                    if (j > i) {
-                        const l = lines[count++];
-                        const start = [p1.pos[currentMode][0] * 10, p1.pos[currentMode][1] * 10];
-                        const end = [p2.pos[currentMode][0] * 10, p2.pos[currentMode][1] * 10];
-                        gsap.to(l, { attr: { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }, duration: 2, ease: "expo.inOut" });
+        function applyLens(x, y) {
+            if (!isArrived) return { x, y };
+            const dx = x - mouse.x;
+            const dy = y - mouse.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const radius = 300;
+            if (dist < radius) {
+                const power = (1 - dist/radius) * 50;
+                return { x: x + (dx/dist) * power, y: y + (dy/dist) * power };
+            }
+            return { x, y };
+        }
+
+        function animate() {
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg');
+            ctx.fillRect(0, 0, width, height);
+            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+
+            zoom += (targetZoom - zoom) * 0.05;
+            document.getElementById('vel-val').innerText = (velocity * 9.9).toFixed(1) + 'c';
+
+            if(focusedPlanet) {
+                cameraOffset.x += (focusedPlanet.targetHome[0] - 500 - cameraOffset.x) * 0.08;
+                cameraOffset.y += (focusedPlanet.targetHome[1] - 500 - cameraOffset.y) * 0.08;
+            } else {
+                cameraOffset.x *= 0.95; cameraOffset.y *= 0.95;
+            }
+
+            const nodeScreenPos = PROJECTS.map(p => {
+                const sZoom = zoom / 120;
+                let rx = width/2 + (p.targetHome[0] - 500 - cameraOffset.x) * sZoom;
+                let ry = height/2 + (p.targetHome[1] - 500 - cameraOffset.y) * sZoom;
+                return { ...p, ...applyLens(rx, ry), sZoom };
+            });
+
+            // Update Links and Star Nodes
+            PROJECTS.forEach((p, idx) => {
+                const start = nodeScreenPos[idx];
+                p.links.forEach(tId => {
+                    const end = nodeScreenPos[PROJECTS.findIndex(tp => tp.id === tId)];
+                    const line = document.getElementById(`link-${p.id}-${tId}`);
+                    if (line) {
+                        line.setAttribute("x1", start.x); line.setAttribute("y1", start.y);
+                        line.setAttribute("x2", end.x); line.setAttribute("y2", end.y);
+                        line.setAttribute("stroke", accent);
+                        line.style.opacity = (1 - (zoom/3000)) * 0.4;
                     }
                 });
+                if (starsG.children[idx]) {
+                    gsap.set(starsG.children[idx].querySelector('circle'), { 
+                        attr: { cx: start.x, cy: start.y, r: 25 * Math.max(0.05, start.sZoom/4) },
+                        opacity: 1 - (zoom/3500)
+                    });
+                }
+            });
+
+            // Kinetic Starfield (Bloating effect during travel)
+            ctx.fillStyle = "white";
+            particles.forEach(s => {
+                const sZoom = zoom / (s.z / 700);
+                let px = width/2 + (s.originX - cameraOffset.x * sZoom) * (zoom/120);
+                let py = height/2 + (s.originY - cameraOffset.y * sZoom) * (zoom/120);
+                const lp = applyLens(px, py);
+                ctx.globalAlpha = Math.max(0.05, Math.min(0.4, sZoom/2) * (1 - (zoom/4500)));
+                
+                // Stretch stars if moving fast
+                const stretch = velocity * 50;
+                ctx.fillRect(lp.x, lp.y, 1.2, 1.2 + stretch);
+            });
+
+            if(zoom > 1800 && focusedPlanet) {
+                drawGlassTerrain(dataWorlds.find(dw => dw.project.id === focusedPlanet.id), accent);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function drawGlassTerrain(world, color) {
+            const step = width / world.pillars.length;
+            const progress = Math.min(1, (zoom - 1800) / 1200);
+            ctx.globalAlpha = progress;
+            world.pillars.forEach((h, i) => {
+                const x = i * step; const y = height - (h * progress);
+                ctx.fillStyle = `rgba(255, 255, 255, 0.02)`; ctx.fillRect(x, y, step - 2, h);
+                ctx.fillStyle = color; ctx.fillRect(x, y, step - 2, 2);
             });
         }
 
         function openPanel(p) {
-            document.getElementById('p-title').textContent = p.title;
-            document.getElementById('p-meta').textContent = `// NODE_${p.cat}`;
-            document.getElementById('p-desc').textContent = p.desc[currentMode];
+            document.getElementById('p-title').innerText = p.title;
+            document.getElementById('p-meta').innerText = p.meta;
+            document.getElementById('p-desc').innerText = p.desc;
             document.getElementById('panel').classList.add('visible');
         }
 
-        function closePanel() { document.getElementById('panel').classList.remove('visible'); }
-
-        function setupInteractions() {
-            window.addEventListener('mousemove', (e) => {
-                const x = (e.clientX / window.innerWidth - 0.5) * 40;
-                const y = (e.clientY / window.innerHeight - 0.5) * 40;
-                gsap.to(universe, { x: x, y: y, duration: 2, ease: "power2.out" });
-                document.getElementById('mouse-coords').innerText = `${Math.floor(e.clientX)},${Math.floor(e.clientY)}`;
-            });
-            // Close panel on clicking empty universe
-            universe.addEventListener('click', closePanel);
+        function closePanel() {
+            document.getElementById('panel').classList.remove('visible');
+            focusedPlanet = null; targetZoom = 130;
         }
 
-        init();
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX; mouse.y = e.clientY;
+            gsap.to(cursor, { x: e.clientX - 12, y: e.clientY - 12, duration: 0.1 });
+        });
+
+        window.addEventListener('resize', setup);
+        setup(); animate();
     </script>
 </body>
 </html>
