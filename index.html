@@ -2,67 +2,85 @@
 <html lang="en" data-mode="space-nerd">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CELESTIA™ | Infinite Deep Verse</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CHΛRITY_RENDERED</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600&family=JetBrains+Mono&display=swap');
 
         :root {
-            --bg: #010206; --accent: #38bdf8; --font: 'Inter', sans-serif;
-            --glass: rgba(255, 255, 255, 0.02);
-            --border: rgba(255, 255, 255, 0.07);
+            --bg: #010208; --accent: #38bdf8; --font: 'Inter', sans-serif;
+            --glass: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.12);
         }
 
-        [data-mode="engineer"] { --bg: #000; --accent: #00ff41; --font: 'JetBrains Mono', monospace; }
-        [data-mode="creative"] { --bg: #040008; --accent: #ff00ea; --font: 'Inter', sans-serif; }
+        [data-mode="engineer"] { --bg: #000803; --accent: #00ff41; --font: 'JetBrains Mono', monospace; }
+        [data-mode="creative"] { --bg: #08010d; --accent: #ff00ea; --font: 'Inter', sans-serif; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: var(--font); cursor: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; color: #fff; font-family: var(--font); transition: background 1.5s ease; touch-action: none; }
 
-        canvas { position: fixed; inset: 0; z-index: 1; }
-
-        #custom-cursor {
-            position: fixed; width: 30px; height: 30px; border: 1px solid var(--accent);
-            border-radius: 50%; pointer-events: none; z-index: 9999;
-            transition: transform 0.1s ease, border-color 0.5s ease;
-            display: flex; align-items: center; justify-content: center;
-        }
-        #custom-cursor::after { content: ''; width: 2px; height: 2px; background: white; border-radius: 50%; }
-
-        #hud {
-            position: fixed; inset: 0; pointer-events: none; z-index: 10;
-            padding: 30px; display: flex; flex-direction: column; justify-content: space-between;
-        }
+        canvas { position: fixed; inset: 0; z-index: 1; opacity: 0; transition: opacity 2s ease; }
 
         .glass-panel {
             background: var(--glass); backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px); border: 1px solid var(--border);
-            padding: 20px; pointer-events: all;
+            padding: clamp(15px, 4vw, 25px); pointer-events: all; border-radius: 12px;
         }
 
-        .header { display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
-        .m-btn { font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase; cursor: pointer; opacity: 0.3; transition: 0.3s; margin-left: 20px; }
-        .m-btn.active { opacity: 1; color: var(--accent); }
+        #hud {
+            position: fixed; inset: 0; pointer-events: none; z-index: 10;
+            padding: clamp(15px, 3vw, 30px); display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .m-btn-container { display: flex; gap: clamp(10px, 2vw, 20px); }
+        .m-btn { font-size: clamp(0.45rem, 1.5vw, 0.6rem); letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; opacity: 0.3; transition: 0.3s; }
+        .m-btn.active { opacity: 1; color: var(--accent); text-shadow: 0 0 15px var(--accent); }
 
         #node-info {
-            position: fixed; top: 50%; right: 40px; transform: translateY(-50%) translateX(120%);
-            width: 380px; transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1); z-index: 20;
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(150%);
+            width: 90%; max-width: 500px; transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1); z-index: 20;
         }
-        #node-info.visible { transform: translateY(-50%) translateX(0); }
+        #node-info.visible { transform: translateX(-50%) translateY(0); }
 
-        .label { font-size: 0.5rem; letter-spacing: 0.3em; opacity: 0.4; text-transform: uppercase; margin-bottom: 10px; color: var(--accent); }
+        .link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .action-chip {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            padding: 14px; border-radius: 8px; text-align: center; font-size: 0.65rem;
+            letter-spacing: 0.1em; text-decoration: none; color: #fff; transition: 0.3s;
+        }
+        .action-chip:hover { background: var(--accent); color: #000; }
+
+        #boot-screen {
+            position: fixed; inset: 0; z-index: 100; background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.4em; text-align: center; padding: 20px;
+        }
+
+        .loader-bar { width: min(250px, 70vw); height: 1px; background: rgba(255,255,255,0.05); margin-top: 25px; overflow: hidden; }
+        .loader-progress { width: 0%; height: 100%; background: var(--accent); }
+
+        @media (max-width: 600px) {
+            #brand { display: none; } /* Hide text logo on tiny screens to save space */
+            .header { justify-content: center; }
+            #node-info { bottom: 15px; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="custom-cursor"></div>
+    <div id="boot-screen">
+        <div id="boot-text">INITIALIZING CONSCIOUSNESS..</div>
+        <div class="loader-bar"><div class="loader-progress" id="boot-bar"></div></div>
+    </div>
+
     <canvas id="canvas"></canvas>
 
     <div id="hud">
         <header class="glass-panel header">
-            <div style="letter-spacing: 0.5em; font-size: 0.6rem; font-weight: 600;">IDENTITY_CORE // <span id="mode-text">SPACE</span></div>
-            <div style="display: flex;">
+            <div id="brand" style="letter-spacing: 0.5em; font-size: 0.6rem; font-weight: 600;">CHΛRITY_RENDERED</div>
+            <div class="m-btn-container">
                 <div class="m-btn active" onclick="setMode('space-nerd', this)">Archive</div>
                 <div class="m-btn" onclick="setMode('engineer', this)">Systems</div>
                 <div class="m-btn" onclick="setMode('creative', this)">Fragments</div>
@@ -70,72 +88,155 @@
         </header>
 
         <footer style="display: flex; justify-content: space-between; font-size: 0.5rem; letter-spacing: 0.3em; opacity: 0.4;">
-            <div>COORD_STREAM: <span id="coord-readout">0,0</span></div>
-            <div>STATUS: VOYAGER_MODE_ACTIVE</div>
+            <div id="status-left">NEURAL_DRIFT: OK</div>
+            <div id="coord-readout">LAT: 0 | LNG: 0</div>
         </footer>
     </div>
 
     <div id="node-info" class="glass-panel">
-        <div class="label">Memory Node</div>
-        <h2 id="n-title" style="font-weight: 200; font-size: 1.8rem; margin-bottom: 20px;"></h2>
-        <p id="n-desc" style="font-size: 0.9rem; line-height: 1.8; opacity: 0.7;"></p>
-        <div onclick="closeNode()" style="margin-top: 40px; cursor: pointer; font-size: 0.5rem; letter-spacing: 0.3em; opacity: 0.5;">[ RETURN ]</div>
+        <div id="n-label" style="font-size: 0.5rem; letter-spacing: 0.4em; opacity: 0.5; margin-bottom: 8px;">DATA_STREAM</div>
+        <h2 id="n-title" style="font-weight: 200; font-size: clamp(1.2rem, 5vw, 1.8rem); margin-bottom: 12px;"></h2>
+        <p id="n-desc" style="font-size: 0.85rem; line-height: 1.6; opacity: 0.8; font-weight: 300;"></p>
+        
+        <div id="social-links" class="link-grid" style="display: none;">
+            <a href="https://linkedin.com/in/charitysilah" target="_blank" class="action-chip">LINKEDIN</a>
+            <a href="https://github.com/Charity2024" target="_blank" class="action-chip">GITHUB</a>
+            <a href="mailto:silahcharity@gmail.com" class="action-chip">EMAIL</a>
+            <a href="#" class="action-chip">CV_RENDER</a>
+        </div>
+
+        <div onclick="closeNode()" style="margin-top: 20px; cursor: pointer; font-size: 0.5rem; letter-spacing: 0.4em; color: var(--accent); border-top: 1px solid var(--border); padding-top: 15px; text-align: center;">[ DISCONNECT_NEURAL_LINK ]</div>
     </div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const cursor = document.getElementById('custom-cursor');
-        let w, h, stars = [], nodes = [], links = [], comets = [], currentMode = 'space-nerd';
-        let zoom = 0.6, targetZoom = 0.6;
+        let w, h, stars = [], nodes = [], links = [], currentMode = 'space-nerd';
+        
+        // Responsive Scaling Factor
+        let scaleFactor = window.innerWidth < 600 ? 0.6 : 1;
+        let zoom = 0.4 * scaleFactor, targetZoom = 0.4 * scaleFactor;
         let camX = 0, camY = 0, targetCamX = 0, targetCamY = 0;
         let mouseX = 0, mouseY = 0, focusedNode = null;
-
-        // Density Settings
-        const STAR_LAYERS = [
-            { count: 3000, speed: 0.2, alpha: 0.2 }, // Deep stars
-            { count: 2000, speed: 0.5, alpha: 0.5 }, // Mid stars
-            { count: 1000, speed: 1.2, alpha: 0.8 }  // Near stars
-        ];
-
-        class Comet {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = (Math.random() - 0.5) * 10000;
-                this.y = (Math.random() - 0.5) * 10000;
-                this.v = (Math.random() * 20) + 10;
-                this.len = Math.random() * 300 + 100;
-            }
-            update() { this.x += this.v; if(this.x > 6000) this.reset(); }
-        }
+        let time = 0;
 
         function init() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
-            nodes = []; links = []; stars = []; comets = [];
-            
-            // Generate Obsidian Graph
-            const hubs = ["Engineering", "Astronomy", "Design", "Logic", "Vision"];
-            hubs.forEach((title, i) => {
-                const hub = { id: i, x: (Math.random()-0.5)*4000, y: (Math.random()-0.5)*4000, size: 10, isHub: true, title: title, desc: `The intersection of my passion for ${title} and architectural code.` };
+            scaleFactor = w < 600 ? 0.6 : 1;
+            nodes = []; links = []; stars = [];
+
+            const clusters = [
+                { t: "IDENTITY", d: "The architectural core of this digital consciousness.", leaves: ["Ethos", "Ambition", "Heritage", "Perspective", "Origins"] },
+                { t: "ENGINEERING", d: "Structural logic applied to systems.", leaves: ["Machine Learning", "IoT", "Scripting", "Circuit Logic", "Automation"] },
+                { t: "ASTRONOMY", d: "Observation of celestial evolution.", leaves: ["NyotaLabs", "Cosmology", "Telescopy", "Data-Sky"] },
+                { t: "FAITH", d: "The metaphysical anchor.", leaves: ["Purpose", "Spirit", "Vision", "Values"] }
+            ];
+
+            clusters.forEach((c, i) => {
+                const angle = (i / clusters.length) * Math.PI * 2;
+                const dist = 400 * scaleFactor;
+                const hub = {
+                    x: Math.cos(angle) * dist, y: Math.sin(angle) * dist,
+                    baseX: Math.cos(angle) * dist, baseY: Math.sin(angle) * dist,
+                    size: 18 * scaleFactor, isHub: true, title: c.t, content: c.d,
+                    phase: Math.random() * 10
+                };
                 nodes.push(hub);
-                for(let j=0; j<8; j++){
-                    const leaf = { id: `l-${i}-${j}`, x: hub.x + (Math.random()-0.5)*800, y: hub.y + (Math.random()-0.5)*800, size: 3, isHub: false, title: "Sub-Thought", desc: "A granular detail of my identity system." };
+
+                c.leaves.forEach((lTitle, j) => {
+                    const lAngle = angle + (Math.random() - 0.5) * 2.5;
+                    const lDist = (200 + Math.random() * 250) * scaleFactor;
+                    const leaf = {
+                        x: Math.cos(lAngle) * lDist, y: Math.sin(lAngle) * lDist,
+                        baseX: Math.cos(lAngle) * lDist, baseY: Math.sin(lAngle) * lDist,
+                        size: 5 * scaleFactor, isHub: false, title: lTitle, content: "Neural fragment active.",
+                        phase: Math.random() * 10
+                    };
                     nodes.push(leaf);
-                    links.push({ source: hub, target: leaf });
+                    links.push({ source: hub, target: leaf, s: Math.random() });
+                });
+            });
+
+            for(let i=0; i < (w < 600 ? 2500 : 5500); i++) {
+                stars.push({ x: (Math.random()-0.5)*12000, y: (Math.random()-0.5)*12000, sp: Math.random()*0.3 + 0.05, alpha: Math.random() });
+            }
+        }
+
+        function animate() {
+            time += 0.01;
+            ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg');
+            ctx.fillRect(0, 0, w, h);
+            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+
+            if (!focusedNode) {
+                targetCamX = (w/2 - mouseX) * 0.1;
+                targetCamY = (h/2 - mouseY) * 0.1;
+            }
+
+            zoom += (targetZoom - zoom) * 0.05;
+            camX += (targetCamX - camX) * 0.05;
+            camY += (targetCamY - camY) * 0.05;
+
+            // Drift
+            nodes.forEach(n => {
+                const drift = n.isHub ? 10 : 30;
+                n.x = n.baseX + Math.sin(time + n.phase) * drift;
+                n.y = n.baseY + Math.cos(time * 0.8 + n.phase) * drift;
+            });
+
+            // Stars
+            stars.forEach(s => {
+                const sx = w/2 + (s.x + camX * s.sp) * zoom;
+                const sy = h/2 + (s.y + camY * s.sp) * zoom;
+                if(sx > 0 && sx < w && sy > 0 && sy < h) {
+                    ctx.fillStyle = `rgba(255,255,255,${s.alpha * zoom})`;
+                    ctx.fillRect(sx, sy, 1.1, 1.1);
                 }
             });
 
-            // Generate "Infinity" Starfield via layers
-            STAR_LAYERS.forEach(layer => {
-                for(let i=0; i<layer.count; i++) {
-                    stars.push({
-                        x: (Math.random()-0.5)*12000, y: (Math.random()-0.5)*12000, 
-                        speed: layer.speed, alpha: layer.alpha, s: Math.random()*2
-                    });
+            // Organic Bezier Links
+            links.forEach(l => {
+                const x1 = w/2 + (l.source.x + camX) * zoom;
+                const y1 = h/2 + (l.source.y + camY) * zoom;
+                const x2 = w/2 + (l.target.x + camX) * zoom;
+                const y2 = h/2 + (l.target.y + camY) * zoom;
+                const cpx = (x1 + x2) / 2 + Math.sin(time + l.s) * 40 * zoom;
+                const cpy = (y1 + y2) / 2 + Math.cos(time + l.s) * 40 * zoom;
+
+                ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(cpx, cpy, x2, y2);
+                ctx.strokeStyle = accent; ctx.globalAlpha = 0.08 * zoom; ctx.lineWidth = 1; ctx.stroke();
+
+                l.s = (l.s + 0.002) % 1;
+                const t = l.s;
+                const px = (1-t)**2 * x1 + 2*(1-t)*t*cpx + t**2 * x2;
+                const py = (1-t)**2 * y1 + 2*(1-t)*t*cpy + t**2 * y2;
+                ctx.globalAlpha = 0.4 * zoom; ctx.fillStyle = "#fff";
+                ctx.beginPath(); ctx.arc(px, py, 1.2 * zoom, 0, Math.PI*2); ctx.fill();
+            });
+
+            // Nodes
+            nodes.forEach(n => {
+                const nx = w/2 + (n.x + camX) * zoom;
+                const ny = h/2 + (n.y + camY) * zoom;
+                const r = (n.isHub ? n.size + Math.sin(time*2 + n.phase)*3 : n.size) * zoom;
+
+                if(nx > -100 && nx < w + 100 && ny > -100 && ny < h + 100) {
+                    ctx.fillStyle = n.isHub && n.title === "IDENTITY" ? "#fff" : accent;
+                    ctx.shadowBlur = (n.isHub ? 40 : 15) * zoom; ctx.shadowColor = ctx.fillStyle;
+                    ctx.beginPath();
+                    if(currentMode === 'engineer') ctx.rect(nx-r, ny-r, r*2, r*2);
+                    else ctx.arc(nx, ny, r, 0, Math.PI*2);
+                    ctx.fill(); ctx.shadowBlur = 0;
+                    
+                    if(zoom > 0.3) {
+                        ctx.font = `200 ${ (n.isHub ? 13 : 8) * zoom}px Inter`;
+                        ctx.fillStyle = "#fff"; ctx.globalAlpha = n.isHub ? 0.7 : 0.3;
+                        ctx.fillText(n.title, nx + r + 8, ny + 4);
+                    }
                 }
             });
-            comets = Array.from({length: 12}, () => new Comet());
+            requestAnimationFrame(animate);
         }
 
         function setMode(mode, btn) {
@@ -143,101 +244,54 @@
             document.documentElement.setAttribute('data-mode', mode);
             document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById('mode-text').innerText = mode.toUpperCase();
         }
 
-        function closeNode() { focusedNode = null; targetZoom = 0.6; document.getElementById('node-info').classList.remove('visible'); }
+        function closeNode() { focusedNode = null; targetZoom = 0.4 * scaleFactor; document.getElementById('node-info').classList.remove('visible'); }
 
-        function animate() {
-            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg');
-            ctx.fillRect(0, 0, w, h);
-            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+        // Multi-device Interaction
+        const handleMove = e => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            mouseX = clientX; mouseY = clientY;
+            document.getElementById('coord-readout').innerText = `X: ${Math.round(clientX)} | Y: ${Math.round(clientY)}`;
+        };
 
-            // Navigator Logic: Move camera based on cursor distance from center
-            if (!focusedNode) {
-                targetCamX += (w/2 - mouseX) * 0.02;
-                targetCamY += (h/2 - mouseY) * 0.02;
-            }
-
-            zoom += (targetZoom - zoom) * 0.05;
-            camX += (targetCamX - camX) * 0.05;
-            camY += (targetCamY - camY) * 0.05;
-
-            document.getElementById('coord-readout').innerText = `${Math.round(camX)}, ${Math.round(camY)}`;
-
-            // 1. Infinite Parallax Stars
-            stars.forEach(s => {
-                // Parallax shift based on layer speed
-                const sx = w/2 + (s.x + camX * s.speed) * zoom;
-                const sy = h/2 + (s.y + camY * s.speed) * zoom;
-                if(sx > 0 && sx < w && sy > 0 && sy < h) {
-                    ctx.fillStyle = `rgba(255,255,255,${s.alpha * zoom})`;
-                    ctx.fillRect(sx, sy, s.s, s.s);
-                }
-            });
-
-            // 2. Comets
-            comets.forEach(c => {
-                c.update();
-                const cx = w/2 + (c.x + camX) * zoom;
-                const cy = h/2 + (c.y + camY) * zoom;
-                const grad = ctx.createLinearGradient(cx, cy, cx - c.len*zoom, cy);
-                grad.addColorStop(0, accent); grad.addColorStop(1, 'transparent');
-                ctx.strokeStyle = grad; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - c.len*zoom, cy); ctx.stroke();
-            });
-
-            // 3. Obsidian Connections
-            ctx.strokeStyle = accent; ctx.globalAlpha = 0.1; ctx.lineWidth = 0.5;
-            links.forEach(l => {
-                const x1 = w/2 + (l.source.x + camX) * zoom; const y1 = h/2 + (l.source.y + camY) * zoom;
-                const x2 = w/2 + (l.target.x + camX) * zoom; const y2 = h/2 + (l.target.y + camY) * zoom;
-                ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-            });
-            ctx.globalAlpha = 1;
-
-            // 4. Adaptive Morphology Nodes
+        const handleClick = e => {
+            const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
             nodes.forEach(n => {
                 const nx = w/2 + (n.x + camX) * zoom;
                 const ny = h/2 + (n.y + camY) * zoom;
-                const radius = n.size * zoom;
-
-                if(nx > -50 && nx < w + 50 && ny > -50 && ny < h + 50) {
-                    ctx.fillStyle = accent;
-                    if(currentMode === 'engineer') {
-                        ctx.fillRect(nx - radius, ny - radius, radius*2, radius*2);
-                    } else if(currentMode === 'creative') {
-                        ctx.beginPath(); ctx.moveTo(nx, ny-radius*1.5); ctx.lineTo(nx+radius, ny+radius); ctx.lineTo(nx-radius, ny+radius); ctx.fill();
-                    } else {
-                        ctx.beginPath(); ctx.arc(nx, ny, radius, 0, Math.PI*2); ctx.fill();
-                    }
-                }
-            });
-
-            requestAnimationFrame(animate);
-        }
-
-        window.addEventListener('mousemove', e => {
-            mouseX = e.clientX; mouseY = e.clientY;
-            gsap.to(cursor, { x: e.clientX - 15, y: e.clientY - 15, duration: 0.1 });
-        });
-
-        window.addEventListener('click', (e) => {
-            nodes.forEach(n => {
-                const nx = w/2 + (n.x + camX) * zoom;
-                const ny = h/2 + (n.y + camY) * zoom;
-                if(Math.sqrt((e.clientX - nx)**2 + (e.clientY - ny)**2) < 30) {
-                    focusedNode = n; targetCamX = -n.x; targetCamY = -n.y; targetZoom = 2;
-                    document.getElementById('n-title').innerText = n.title;
-                    document.getElementById('n-desc').innerText = n.desc;
+                const hitArea = (n.isHub ? 50 : 30) * scaleFactor;
+                if(Math.sqrt((clientX - nx)**2 + (clientY - ny)**2) < hitArea) {
+                    focusedNode = n; targetCamX = -n.x; targetCamY = -n.y; targetZoom = 1.5;
                     document.getElementById('node-info').classList.add('visible');
+                    document.getElementById('n-title').innerText = n.title;
+                    document.getElementById('n-desc').innerText = n.content;
+                    document.getElementById('social-links').style.display = n.title === "IDENTITY" ? "grid" : "none";
                 }
             });
-        });
+        };
 
-        window.addEventListener('wheel', e => {
-            const delta = e.deltaY > 0 ? 0.9 : 1.1;
-            targetZoom = Math.min(Math.max(targetZoom * delta, 0.05), 5);
-        });
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchstart', handleMove);
+        window.addEventListener('click', handleClick);
+        window.addEventListener('wheel', e => { targetZoom = Math.min(Math.max(targetZoom * (e.deltaY > 0 ? 0.9 : 1.1), 0.1), 4); });
+
+        window.onload = () => {
+            let p = 0;
+            const b = document.getElementById('boot-bar');
+            const interval = setInterval(() => {
+                p += Math.random() * 10; b.style.width = Math.min(p, 100) + "%";
+                if(p >= 100) {
+                    clearInterval(interval);
+                    gsap.to('#boot-screen', { opacity: 0, delay: 0.5, onComplete: () => {
+                        document.getElementById('boot-screen').style.display = 'none';
+                        canvas.style.opacity = '1';
+                    }});
+                }
+            }, 50);
+        };
 
         window.addEventListener('resize', init);
         init(); animate();
