@@ -3,307 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CELESTIA™ | Kinetic Deep Verse</title>
+    <title>CELESTIA™ | Infinite Deep Verse</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600&family=JetBrains+Mono&display=swap');
 
         :root {
-            --bg: #010208; --star-color: #ffffff; --accent: #38bdf8;
-            --nebula-1: rgba(56, 189, 248, 0.12);
-            --nebula-2: rgba(139, 92, 246, 0.12);
-            --glass-bg: rgba(255, 255, 255, 0.02);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --font: 'Inter', sans-serif;
+            --bg: #010206; --accent: #38bdf8; --font: 'Inter', sans-serif;
+            --glass: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.07);
         }
 
-        [data-mode="engineer"] { --bg: #000; --star-color: #00ff41; --accent: #00ff41; --nebula-1: rgba(0, 255, 65, 0.08); --nebula-2: rgba(0, 40, 10, 0.15); --font: 'JetBrains Mono', monospace; }
-        [data-mode="creative"] { --bg: #080110; --star-color: #ff00ea; --accent: #00f2ff; --nebula-1: rgba(255, 0, 234, 0.12); --nebula-2: rgba(0, 242, 255, 0.08); }
+        [data-mode="engineer"] { --bg: #000; --accent: #00ff41; --font: 'JetBrains Mono', monospace; }
+        [data-mode="creative"] { --bg: #040008; --accent: #ff00ea; --font: 'Inter', sans-serif; }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--star-color); font-family: var(--font); transition: background 2s; cursor: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: var(--font); cursor: none; }
 
-        canvas { position: fixed; inset: 0; display: block; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
-        #universe-svg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
-        
-        .overlay { position: fixed; inset: 0; pointer-events: none; z-index: 10; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; opacity: 0; }
-        
-        .glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-        }
-
-        .header-glass { display: flex; gap: 8px; padding: 10px 20px; pointer-events: all; width: fit-content; align-self: center; }
-        .mode-btn { cursor: pointer; font-size: 0.55rem; letter-spacing: 0.4em; text-transform: uppercase; opacity: 0.3; transition: 0.4s; padding: 8px 16px; border-radius: 12px; }
-        .mode-btn.active { opacity: 1; color: var(--accent); background: rgba(255,255,255,0.03); }
-
-        #panel {
-            position: fixed; right: 30px; top: 30px; bottom: 30px; width: 100%; max-width: 440px; 
-            padding: 60px; z-index: 20; transform: translateX(130%); 
-            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        #panel.visible { transform: translateX(0); }
+        canvas { position: fixed; inset: 0; z-index: 1; }
 
         #custom-cursor {
-            position: fixed; width: 24px; height: 24px; border: 1px solid var(--accent);
+            position: fixed; width: 30px; height: 30px; border: 1px solid var(--accent);
             border-radius: 50%; pointer-events: none; z-index: 9999;
-            mix-blend-mode: difference;
-        }
-
-        #arrival-scrim {
-            position: fixed; inset: 0; background: #000; z-index: 2000; 
+            transition: transform 0.1s ease, border-color 0.5s ease;
             display: flex; align-items: center; justify-content: center;
-            pointer-events: all; transition: opacity 2s;
+        }
+        #custom-cursor::after { content: ''; width: 2px; height: 2px; background: white; border-radius: 50%; }
+
+        #hud {
+            position: fixed; inset: 0; pointer-events: none; z-index: 10;
+            padding: 30px; display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        footer { font-size: 0.5rem; letter-spacing: 0.5em; opacity: 0.3; display: flex; justify-content: space-between; mix-blend-mode: difference; }
+        .glass-panel {
+            background: var(--glass); backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px); border: 1px solid var(--border);
+            padding: 20px; pointer-events: all;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
+        .m-btn { font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase; cursor: pointer; opacity: 0.3; transition: 0.3s; margin-left: 20px; }
+        .m-btn.active { opacity: 1; color: var(--accent); }
+
+        #node-info {
+            position: fixed; top: 50%; right: 40px; transform: translateY(-50%) translateX(120%);
+            width: 380px; transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1); z-index: 20;
+        }
+        #node-info.visible { transform: translateY(-50%) translateX(0); }
+
+        .label { font-size: 0.5rem; letter-spacing: 0.3em; opacity: 0.4; text-transform: uppercase; margin-bottom: 10px; color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div id="arrival-scrim" onclick="beginArrival()">
-        <div style="letter-spacing: 1.2em; font-size: 0.7rem; opacity: 0.6; cursor: pointer;">ACTIVATE_TRAVEL_CORE</div>
-    </div>
-
     <div id="custom-cursor"></div>
-    <canvas id="main-canvas"></canvas>
+    <canvas id="canvas"></canvas>
 
-    <div class="overlay" id="main-ui">
-        <header class="header-glass glass">
-            <div class="mode-btn active" onclick="setMode('space-nerd', this)">Space</div>
-            <div class="mode-btn" onclick="setMode('engineer', this)">Engineer</div>
-            <div class="mode-btn" onclick="setMode('creative', this)">Creative</div>
+    <div id="hud">
+        <header class="glass-panel header">
+            <div style="letter-spacing: 0.5em; font-size: 0.6rem; font-weight: 600;">IDENTITY_CORE // <span id="mode-text">SPACE</span></div>
+            <div style="display: flex;">
+                <div class="m-btn active" onclick="setMode('space-nerd', this)">Archive</div>
+                <div class="m-btn" onclick="setMode('engineer', this)">Systems</div>
+                <div class="m-btn" onclick="setMode('creative', this)">Fragments</div>
+            </div>
         </header>
-        <footer style="margin-top: auto;">
-            <div>TRAVEL_VELOCITY: <span id="vel-val">0.0c</span></div>
-            <div>DEEP_VERSE_LENSING_V3</div>
-            <div>© CELESTIA™ // 2026</div>
+
+        <footer style="display: flex; justify-content: space-between; font-size: 0.5rem; letter-spacing: 0.3em; opacity: 0.4;">
+            <div>COORD_STREAM: <span id="coord-readout">0,0</span></div>
+            <div>STATUS: VOYAGER_MODE_ACTIVE</div>
         </footer>
     </div>
 
-    <div id="panel" class="glass">
-        <div onclick="closePanel()" style="cursor:pointer; font-size: 0.55rem; opacity: 0.3; margin-bottom: 50px;">[ BREAK_ORBIT ]</div>
-        <h2 id="p-title" style="font-size: 2.2rem; font-weight: 300; margin-bottom: 20px;"></h2>
-        <div id="p-meta" style="font-size: 0.6rem; letter-spacing: 0.4em; margin-bottom: 40px; color: var(--accent);"></div>
-        <p id="p-desc" style="line-height: 2.2; font-size: 1.05rem; opacity: 0.6; font-weight: 300;"></p>
+    <div id="node-info" class="glass-panel">
+        <div class="label">Memory Node</div>
+        <h2 id="n-title" style="font-weight: 200; font-size: 1.8rem; margin-bottom: 20px;"></h2>
+        <p id="n-desc" style="font-size: 0.9rem; line-height: 1.8; opacity: 0.7;"></p>
+        <div onclick="closeNode()" style="margin-top: 40px; cursor: pointer; font-size: 0.5rem; letter-spacing: 0.3em; opacity: 0.5;">[ RETURN ]</div>
     </div>
 
-    <svg id="universe-svg">
-        <g id="links-group" opacity="0.4"></g>
-        <g id="stars-group" pointer-events="all"></g>
-    </svg>
-
     <script>
-        const PROJECTS = [
-            { id: 1, title: "Neural Shell", pos: { "space-nerd": [25, 30], engineer: [15, 20], creative: [10, 60] }, desc: "Architecting synthetic cognition pathways.", meta: "AI_SINGULARITY", links: [2, 3] },
-            { id: 2, title: "Void Ledger", pos: { "space-nerd": [75, 50], engineer: [15, 50], creative: [85, 25] }, desc: "Quantum-scale distributed ledger orchestration.", meta: "MESH_LEDGER", links: [1, 3] },
-            { id: 3, title: "Aether Engine", pos: { "space-nerd": [45, 85], engineer: [15, 80], creative: [50, 40] }, desc: "Volumetric light synthesis in browser environments.", meta: "VFX_CORE", links: [1, 2] }
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.getElementById('custom-cursor');
+        let w, h, stars = [], nodes = [], links = [], comets = [], currentMode = 'space-nerd';
+        let zoom = 0.6, targetZoom = 0.6;
+        let camX = 0, camY = 0, targetCamX = 0, targetCamY = 0;
+        let mouseX = 0, mouseY = 0, focusedNode = null;
+
+        // Density Settings
+        const STAR_LAYERS = [
+            { count: 3000, speed: 0.2, alpha: 0.2 }, // Deep stars
+            { count: 2000, speed: 0.5, alpha: 0.5 }, // Mid stars
+            { count: 1000, speed: 1.2, alpha: 0.8 }  // Near stars
         ];
 
-        const canvas = document.getElementById('main-canvas');
-        const ctx = canvas.getContext('2d');
-        const starsG = document.getElementById('stars-group');
-        const linksG = document.getElementById('links-group');
-        const cursor = document.getElementById('custom-cursor');
-
-        let width, height, currentMode = 'space-nerd';
-        let zoom = 0.01; let targetZoom = 0.01;
-        let particles = [], nebulas = [], rays = [], dataWorlds = [], focusedPlanet = null;
-        let cameraOffset = { x: 0, y: 0 };
-        let mouse = { x: -1000, y: -1000 };
-        let isArrived = false;
-        let velocity = 0;
-
-        class DataWorld {
-            constructor(project) {
-                this.project = project;
-                this.pillars = Array.from({length: 40}, () => Math.random() * 250 + 50);
+        class Comet {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = (Math.random() - 0.5) * 10000;
+                this.y = (Math.random() - 0.5) * 10000;
+                this.v = (Math.random() * 20) + 10;
+                this.len = Math.random() * 300 + 100;
             }
+            update() { this.x += this.v; if(this.x > 6000) this.reset(); }
         }
 
-        class NebulaCloud {
-            constructor() {
-                this.x = (Math.random() - 0.5) * 6000;
-                this.y = (Math.random() - 0.5) * 6000;
-                this.r = Math.random() * 1800 + 900;
-            }
-        }
-
-        function beginArrival() {
-            document.getElementById('arrival-scrim').style.opacity = '0';
-            setTimeout(() => document.getElementById('arrival-scrim').remove(), 2000);
-            gsap.to(window, {
-                duration: 4, onUpdate: () => { targetZoom = 130; },
-                ease: "power4.inOut",
-                onComplete: () => {
-                    isArrived = true;
-                    gsap.to('#main-ui', { opacity: 1, duration: 1.5 });
+        function init() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            nodes = []; links = []; stars = []; comets = [];
+            
+            // Generate Obsidian Graph
+            const hubs = ["Engineering", "Astronomy", "Design", "Logic", "Vision"];
+            hubs.forEach((title, i) => {
+                const hub = { id: i, x: (Math.random()-0.5)*4000, y: (Math.random()-0.5)*4000, size: 10, isHub: true, title: title, desc: `The intersection of my passion for ${title} and architectural code.` };
+                nodes.push(hub);
+                for(let j=0; j<8; j++){
+                    const leaf = { id: `l-${i}-${j}`, x: hub.x + (Math.random()-0.5)*800, y: hub.y + (Math.random()-0.5)*800, size: 3, isHub: false, title: "Sub-Thought", desc: "A granular detail of my identity system." };
+                    nodes.push(leaf);
+                    links.push({ source: hub, target: leaf });
                 }
             });
-        }
 
-        function setup() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            particles = Array.from({length: 800}, () => ({
-                originX: (Math.random()-0.5)*7000, originY: (Math.random()-0.5)*7000, z: Math.random()*3500, size: Math.random() * 1.5 + 0.5
-            }));
-            nebulas = Array.from({length: 8}, () => new NebulaCloud());
-            dataWorlds = PROJECTS.map(p => new DataWorld(p));
-            renderDeepVerse();
-            setMode('space-nerd', document.querySelector('.mode-btn'));
-        }
-
-        function renderDeepVerse() {
-            starsG.innerHTML = '';
-            linksG.innerHTML = '';
-            PROJECTS.forEach(p => {
-                p.links.forEach(targetId => {
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.id = `link-${p.id}-${targetId}`;
-                    line.setAttribute("stroke-width", "1");
-                    line.setAttribute("stroke-dasharray", "5,10");
-                    linksG.appendChild(line);
-                });
+            // Generate "Infinity" Starfield via layers
+            STAR_LAYERS.forEach(layer => {
+                for(let i=0; i<layer.count; i++) {
+                    stars.push({
+                        x: (Math.random()-0.5)*12000, y: (Math.random()-0.5)*12000, 
+                        speed: layer.speed, alpha: layer.alpha, s: Math.random()*2
+                    });
+                }
             });
-            PROJECTS.forEach((p) => {
-                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                c.setAttribute("r", "25");
-                c.style.fill = "white";
-                c.style.cursor = "pointer";
-                g.appendChild(c);
-                starsG.appendChild(g);
-                g.addEventListener('click', () => travelToNode(p));
-            });
-        }
-
-        function travelToNode(p) {
-            focusedPlanet = p;
-            targetZoom = 3500;
-            openPanel(p);
-            // Visual Velocity Feedback
-            gsap.to(window, { duration: 1, onUpdate: () => { velocity = 0.9; }, onComplete: () => { velocity = 0; } });
+            comets = Array.from({length: 12}, () => new Comet());
         }
 
         function setMode(mode, btn) {
             currentMode = mode;
             document.documentElement.setAttribute('data-mode', mode);
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            PROJECTS.forEach(p => p.targetHome = [p.pos[mode][0] * 10, p.pos[mode][1] * 10]);
+            document.getElementById('mode-text').innerText = mode.toUpperCase();
         }
 
-        function applyLens(x, y) {
-            if (!isArrived) return { x, y };
-            const dx = x - mouse.x;
-            const dy = y - mouse.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            const radius = 300;
-            if (dist < radius) {
-                const power = (1 - dist/radius) * 50;
-                return { x: x + (dx/dist) * power, y: y + (dy/dist) * power };
-            }
-            return { x, y };
-        }
+        function closeNode() { focusedNode = null; targetZoom = 0.6; document.getElementById('node-info').classList.remove('visible'); }
 
         function animate() {
             ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg');
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillRect(0, 0, w, h);
             const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent');
 
-            zoom += (targetZoom - zoom) * 0.05;
-            document.getElementById('vel-val').innerText = (velocity * 9.9).toFixed(1) + 'c';
-
-            if(focusedPlanet) {
-                cameraOffset.x += (focusedPlanet.targetHome[0] - 500 - cameraOffset.x) * 0.08;
-                cameraOffset.y += (focusedPlanet.targetHome[1] - 500 - cameraOffset.y) * 0.08;
-            } else {
-                cameraOffset.x *= 0.95; cameraOffset.y *= 0.95;
+            // Navigator Logic: Move camera based on cursor distance from center
+            if (!focusedNode) {
+                targetCamX += (w/2 - mouseX) * 0.02;
+                targetCamY += (h/2 - mouseY) * 0.02;
             }
 
-            const nodeScreenPos = PROJECTS.map(p => {
-                const sZoom = zoom / 120;
-                let rx = width/2 + (p.targetHome[0] - 500 - cameraOffset.x) * sZoom;
-                let ry = height/2 + (p.targetHome[1] - 500 - cameraOffset.y) * sZoom;
-                return { ...p, ...applyLens(rx, ry), sZoom };
-            });
+            zoom += (targetZoom - zoom) * 0.05;
+            camX += (targetCamX - camX) * 0.05;
+            camY += (targetCamY - camY) * 0.05;
 
-            // Update Links and Star Nodes
-            PROJECTS.forEach((p, idx) => {
-                const start = nodeScreenPos[idx];
-                p.links.forEach(tId => {
-                    const end = nodeScreenPos[PROJECTS.findIndex(tp => tp.id === tId)];
-                    const line = document.getElementById(`link-${p.id}-${tId}`);
-                    if (line) {
-                        line.setAttribute("x1", start.x); line.setAttribute("y1", start.y);
-                        line.setAttribute("x2", end.x); line.setAttribute("y2", end.y);
-                        line.setAttribute("stroke", accent);
-                        line.style.opacity = (1 - (zoom/3000)) * 0.4;
-                    }
-                });
-                if (starsG.children[idx]) {
-                    gsap.set(starsG.children[idx].querySelector('circle'), { 
-                        attr: { cx: start.x, cy: start.y, r: 25 * Math.max(0.05, start.sZoom/4) },
-                        opacity: 1 - (zoom/3500)
-                    });
+            document.getElementById('coord-readout').innerText = `${Math.round(camX)}, ${Math.round(camY)}`;
+
+            // 1. Infinite Parallax Stars
+            stars.forEach(s => {
+                // Parallax shift based on layer speed
+                const sx = w/2 + (s.x + camX * s.speed) * zoom;
+                const sy = h/2 + (s.y + camY * s.speed) * zoom;
+                if(sx > 0 && sx < w && sy > 0 && sy < h) {
+                    ctx.fillStyle = `rgba(255,255,255,${s.alpha * zoom})`;
+                    ctx.fillRect(sx, sy, s.s, s.s);
                 }
             });
 
-            // Kinetic Starfield (Bloating effect during travel)
-            ctx.fillStyle = "white";
-            particles.forEach(s => {
-                const sZoom = zoom / (s.z / 700);
-                let px = width/2 + (s.originX - cameraOffset.x * sZoom) * (zoom/120);
-                let py = height/2 + (s.originY - cameraOffset.y * sZoom) * (zoom/120);
-                const lp = applyLens(px, py);
-                ctx.globalAlpha = Math.max(0.05, Math.min(0.4, sZoom/2) * (1 - (zoom/4500)));
-                
-                // Stretch stars if moving fast
-                const stretch = velocity * 50;
-                ctx.fillRect(lp.x, lp.y, 1.2, 1.2 + stretch);
+            // 2. Comets
+            comets.forEach(c => {
+                c.update();
+                const cx = w/2 + (c.x + camX) * zoom;
+                const cy = h/2 + (c.y + camY) * zoom;
+                const grad = ctx.createLinearGradient(cx, cy, cx - c.len*zoom, cy);
+                grad.addColorStop(0, accent); grad.addColorStop(1, 'transparent');
+                ctx.strokeStyle = grad; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - c.len*zoom, cy); ctx.stroke();
             });
 
-            if(zoom > 1800 && focusedPlanet) {
-                drawGlassTerrain(dataWorlds.find(dw => dw.project.id === focusedPlanet.id), accent);
-            }
+            // 3. Obsidian Connections
+            ctx.strokeStyle = accent; ctx.globalAlpha = 0.1; ctx.lineWidth = 0.5;
+            links.forEach(l => {
+                const x1 = w/2 + (l.source.x + camX) * zoom; const y1 = h/2 + (l.source.y + camY) * zoom;
+                const x2 = w/2 + (l.target.x + camX) * zoom; const y2 = h/2 + (l.target.y + camY) * zoom;
+                ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            });
+            ctx.globalAlpha = 1;
+
+            // 4. Adaptive Morphology Nodes
+            nodes.forEach(n => {
+                const nx = w/2 + (n.x + camX) * zoom;
+                const ny = h/2 + (n.y + camY) * zoom;
+                const radius = n.size * zoom;
+
+                if(nx > -50 && nx < w + 50 && ny > -50 && ny < h + 50) {
+                    ctx.fillStyle = accent;
+                    if(currentMode === 'engineer') {
+                        ctx.fillRect(nx - radius, ny - radius, radius*2, radius*2);
+                    } else if(currentMode === 'creative') {
+                        ctx.beginPath(); ctx.moveTo(nx, ny-radius*1.5); ctx.lineTo(nx+radius, ny+radius); ctx.lineTo(nx-radius, ny+radius); ctx.fill();
+                    } else {
+                        ctx.beginPath(); ctx.arc(nx, ny, radius, 0, Math.PI*2); ctx.fill();
+                    }
+                }
+            });
 
             requestAnimationFrame(animate);
         }
 
-        function drawGlassTerrain(world, color) {
-            const step = width / world.pillars.length;
-            const progress = Math.min(1, (zoom - 1800) / 1200);
-            ctx.globalAlpha = progress;
-            world.pillars.forEach((h, i) => {
-                const x = i * step; const y = height - (h * progress);
-                ctx.fillStyle = `rgba(255, 255, 255, 0.02)`; ctx.fillRect(x, y, step - 2, h);
-                ctx.fillStyle = color; ctx.fillRect(x, y, step - 2, 2);
-            });
-        }
-
-        function openPanel(p) {
-            document.getElementById('p-title').innerText = p.title;
-            document.getElementById('p-meta').innerText = p.meta;
-            document.getElementById('p-desc').innerText = p.desc;
-            document.getElementById('panel').classList.add('visible');
-        }
-
-        function closePanel() {
-            document.getElementById('panel').classList.remove('visible');
-            focusedPlanet = null; targetZoom = 130;
-        }
-
         window.addEventListener('mousemove', e => {
-            mouse.x = e.clientX; mouse.y = e.clientY;
-            gsap.to(cursor, { x: e.clientX - 12, y: e.clientY - 12, duration: 0.1 });
+            mouseX = e.clientX; mouseY = e.clientY;
+            gsap.to(cursor, { x: e.clientX - 15, y: e.clientY - 15, duration: 0.1 });
         });
 
-        window.addEventListener('resize', setup);
-        setup(); animate();
+        window.addEventListener('click', (e) => {
+            nodes.forEach(n => {
+                const nx = w/2 + (n.x + camX) * zoom;
+                const ny = h/2 + (n.y + camY) * zoom;
+                if(Math.sqrt((e.clientX - nx)**2 + (e.clientY - ny)**2) < 30) {
+                    focusedNode = n; targetCamX = -n.x; targetCamY = -n.y; targetZoom = 2;
+                    document.getElementById('n-title').innerText = n.title;
+                    document.getElementById('n-desc').innerText = n.desc;
+                    document.getElementById('node-info').classList.add('visible');
+                }
+            });
+        });
+
+        window.addEventListener('wheel', e => {
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            targetZoom = Math.min(Math.max(targetZoom * delta, 0.05), 5);
+        });
+
+        window.addEventListener('resize', init);
+        init(); animate();
     </script>
 </body>
 </html>
